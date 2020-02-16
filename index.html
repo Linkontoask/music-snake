@@ -1,0 +1,31 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+        <title>音乐贪吃蛇</title>
+        <link rel="stylesheet" href="index.css">
+    </head>
+    <body>
+        <main>
+            <h1>跟随音乐跳动的蛇（五颜六色的蛇）</h1>
+            <canvas id="canvas" width="600" height="300"></canvas>
+            <div class="mask" id="mask">
+                暂停干嘛？没有规则给你看，也没有其它设置！
+            </div>
+            <div class="mobile-control">
+                <div class="c" style="margin: 0 auto;" data-arrow="top">上</div>
+                <div class="flex">
+                    <div class="c" data-arrow="left">左</div>
+                    <div class="c" data-arrow="right">右</div>
+                </div>
+                <div class="c" style="margin: 0 auto;" data-arrow="bottom">下</div>
+            </div>
+            <div class="fraction">
+                <p>分数: <i id="fraction">0</i></p>
+                <p style="margin-left: 20px;">速度(音频分贝/移动设备不支持)：<i id="speed">100</i></p>
+            </div>
+            <button id="btn">开始</button>
+        </main>
+    </body>
+    <script src="index.js"></script>
+</html>
