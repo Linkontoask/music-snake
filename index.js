@@ -19,11 +19,9 @@ let Fraction = 0
 const renderRandom = (n) => (Math.random() * n) | 0 
 
 /**
- * 生成随机颜色，rgb
+ * 生成随机颜色
  */
-const generateColor = () => {
-    return `rgb(${renderRandom(255)}, ${renderRandom(255)}, ${renderRandom(255)})`
-}
+const generateRandomColor = () => `hsl(${renderRandom(360)}, ${renderRandom(100)}%, ${renderRandom(80) + 20}%)`
 
 /**
  * 睡眠，控制运动时间间隔
@@ -99,12 +97,14 @@ class Canvas {
     }
 }
 
+let Lightness = 0
 /**
  * 蛇的最小单位
  * {
  *   color: '颜色',
  *   status: '状态',
- *   path: '等待移动的位置数组'
+ *   path: '等待移动的位置数组',
+ *   leave: '等级'
  * }
  */
 class Snake extends Canvas {
@@ -112,12 +112,21 @@ class Snake extends Canvas {
      * @param {CanvasRenderingContext2D} ctx 
      * @param {[number[]]} path 
      */
-    constructor(ctx, path) {
+    constructor(ctx, path, leave) {
         super(ctx)
+        this.Lightness = 0
+        this.leaveMap = {
+            1: 188,
+            2: 244,
+            3: 302,
+            4: 42,
+            5: 0
+        }
         this.status = Status.health  // 默认健康
         this.path = path             // 需要移动的初始化路径
         this.currentPosition = this.path[0] // 当前位置
-        this.color = generateColor() // 随机生成默认颜色
+        this.leave = leave || 1;              // 等级
+        this.color = this.generateColor(this.leaveMap[this.leave]) // 生成默认渐变色
         this.draw(this.currentPosition, this.color)
     }
     move() {
@@ -136,6 +145,17 @@ class Snake extends Canvas {
                 this.draw([x, y], this.color)     // 绘制运动过后的位置
             }
         }
+    }
+    upgrade() {
+        this.color = this.generateColor(this.leaveMap[(++this.leave > 5 ? 5 : this.leave)], true)
+        leave.innerText = this.leave
+    }
+    generateColor(h, up) {
+        if (!up) {
+            Lightness += 2
+            this.Lightness = Lightness
+        }
+        return `hsl(${h}, ${50}%, ${this.Lightness}%)`
     }
     setPath(...path) {
         this.path = this.path.concat(path)
@@ -159,7 +179,7 @@ class Food extends Canvas {
     constructor(ctx, position) {
         super(ctx)
         this.position = position
-        this.color = generateColor() // 随机生成默认颜色
+        this.color = generateRandomColor() // 随机生成默认颜色
         this.draw(this.position, this.color)
     }
     eaten() {
@@ -186,7 +206,7 @@ const SnakeManager = async (ctx) => {
     const head = [300, 150] // 蛇头在哪里
 
     let tp = []
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 10; i++) {
         const [x, y] = [head[0] - i * (SnakeSize + 2), head[1]] // 蛇初始化的位置
         const snake = new Snake(ctx, [[x, y]])
         snake.setPath(...([].concat(tp).reverse()))             // 拷贝上一条蛇的位置作为这条蛇的下一个位置
@@ -223,6 +243,7 @@ const calcPosition = (gesture, position, type) => {
 
 const snakeMotion = async (ctx, gesture) => {
     await sleep(Time)
+    let upgrade = false
     for (var i = 0; i < SnakeArray.length; i++) {
         const snake = SnakeArray[i]
         if (GameOver || Pause) return // 防止最后一次绘制
@@ -232,15 +253,20 @@ const snakeMotion = async (ctx, gesture) => {
             const [[x1, y1]] = position    // 蛇
             if (x1 === x && y1 === y) {
                 // 检测蛇是否吃到了食物
+                upgrade = true
                 fraction.innerText = ++Fraction
                 const lastSnake = SnakeArray[SnakeArray.length - 1]
                 let lastSnakePosition = lastSnake.getPath(0)    // 当前位置
                 lastSnakePosition = calcPosition(gesture, lastSnakePosition, 'new')
-                const newSnake = new Snake(ctx, [lastSnakePosition])
+                const newSnake = new Snake(ctx, [lastSnakePosition], snake.leave)
                 newSnake.setPath(...lastSnake.getPath())
                 SnakeArray.push(newSnake)
                 FoodPosition = FoodManager(ctx).position
             }
+        }
+        if (SnakeArray.length % 4 === 0 && upgrade) {
+            SnakeArray.forEach(item => item.upgrade())
+            upgrade = false
         }
         let lastPosition = [].concat(position[position.length - 1]) // 蛇的运动路径 最后一个未执行的运动点 (拷贝一个)
         lastPosition = calcPosition(gesture, lastPosition)

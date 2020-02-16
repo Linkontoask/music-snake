@@ -28,6 +28,7 @@ h1 {
     width: 600px;
     margin: 12px auto;
     font-size: 14px;
+    line-height: 2;
 }
 .fraction p {
     display: initial;
